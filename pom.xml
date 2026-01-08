@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>de.berlin.htw</groupId>
+    <artifactId>verteilte-anwendungen-kafka</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Verteilte Anwendungen Übung 4</name>
+    
+    <modules>
+        <module>transaction-service</module>
+        <module>fraud-alert-service</module>
+        <module>notification-service</module>
+        <module>transfer-service</module>
+        <module>integration-test</module>
+    </modules>
+    <properties>
+        <compiler-plugin.version>3.13.0</compiler-plugin.version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <surefire-plugin.version>3.5.1</surefire-plugin.version>
+        <quarkus.platform.version>3.16.2</quarkus.platform.version>
+        <quarkus.package.type>uber-jar</quarkus.package.type>
+        <skipITs>true</skipITs>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.quarkus.platform</groupId>
+                <artifactId>quarkus-bom</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

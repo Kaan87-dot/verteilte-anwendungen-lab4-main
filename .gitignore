@@ -1,0 +1,16 @@
+target/
+.settings/
+.project
+.classpath
+.checkstyle
+.DS_Store
+*.factorypath
+nbactions.xml
+nb-configuration.xml
+pf-sbx/
+*.iml
+.idea
+*.log
+*.log.*
+overlays
+**/target/

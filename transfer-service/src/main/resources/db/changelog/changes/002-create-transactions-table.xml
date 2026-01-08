@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-create-transactions-table-h2" author="system" dbms="h2">
+        <createTable tableName="transactions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="transaction_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="from_account" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="to_account" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="processed_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <createIndex indexName="idx_transactions_transaction_id" tableName="transactions">
+            <column name="transaction_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_transactions_from_account" tableName="transactions">
+            <column name="from_account"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_transactions_to_account" tableName="transactions">
+            <column name="to_account"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_transactions_processed_at" tableName="transactions">
+            <column name="processed_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="002-create-transactions-table-postgresql" author="system" dbms="postgresql">
+        <createTable tableName="transactions">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="transaction_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="from_account" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="to_account" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(19,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="currency" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="timestamp" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="processed_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <createIndex indexName="idx_transactions_transaction_id" tableName="transactions">
+            <column name="transaction_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_transactions_from_account" tableName="transactions">
+            <column name="from_account"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_transactions_to_account" tableName="transactions">
+            <column name="to_account"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_transactions_processed_at" tableName="transactions">
+            <column name="processed_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+
