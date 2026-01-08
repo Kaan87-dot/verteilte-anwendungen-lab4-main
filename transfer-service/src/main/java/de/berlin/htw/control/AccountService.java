@@ -48,6 +48,12 @@ public class AccountService {
         transactionRepository.persist(transaction);
     }
 
+    // Idempotenz-Check: Prüft ob eine Transaktion bereits verarbeitet wurde
+    // Idempotency check: Checks if a transaction has already been processed
+    public boolean isTransactionProcessed(String transactionId) {
+        return transactionRepository.findByTransactionId(transactionId) != null;
+    }
+
     public List<Transaction> getTransactionsFromAccount(String accountId) {
         return transactionRepository.findByFromAccount(accountId).stream()
                 .map(this::toDTO)
