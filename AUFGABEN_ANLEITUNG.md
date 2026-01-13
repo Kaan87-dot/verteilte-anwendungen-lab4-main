@@ -173,6 +173,25 @@ PartitionCount: 3
 ReplicationFactor: 1
 ```
 
+#### ✨ Visuelle Überprüfung im Kafka UI (Optional)
+
+1. **Öffne Browser:** http://localhost:8080
+2. **Navigiere zu Topics:** Klicke auf "Topics" im Menü
+3. **Wähle raw-transactions:** Klicke auf das Topic
+4. **Überprüfe Konfiguration:** Klicke auf "Overview" Tab
+
+**Was du sehen solltest:**
+- ✅ **Partitions:** 3
+- ✅ **Replication Factor:** 1
+- ✅ **Retention:** 604800000 ms (7 Tage)
+
+5. **Überprüfe Messages:** Klicke auf "Messages" Tab
+6. **Erwartete Ausgabe:**
+   - Du solltest die gesendete Transaktion (100.50 EUR) sehen
+   - Key = "DEAcc1" (fromAccount)
+   - Value = JSON mit allen Transaktionsdetails
+   - Partition 0, 1 oder 2
+
 ### ✅ Lösung für Aufgabe 1:
 - **Partitionen**: 3 (für parallele Verarbeitung)
 - **Retention**: 7 Tage (Standard, für Replay)
@@ -326,6 +345,35 @@ INFO ✓ Valid Transaction: tx-... | From: TestAcc1 | To: TestAcc2 | Amount: 250
 - Log-Level ist **INFO** (nicht WARN) ✅
 - Alle Transaktionsdetails sind sichtbar ✅
 
+#### ✨ Visuelle Überprüfung im Kafka UI (Optional)
+
+**Valid Transactions überprüfen:**
+1. Öffne http://localhost:8080
+2. Navigiere zu **Topics** → **valid-transactions**
+3. Klicke auf **Consumers** Tab
+4. **Was du sehen solltest:**
+   - Consumer Group: `notification-group` ✅
+   - 1 Consumer aktiv ✅
+   - LAG sollte 0 oder sehr niedrig sein ✅
+
+5. Klicke auf **Messages** Tab
+6. **Erwartete Ausgabe:**
+   - Alle gültigen Transaktionen (TestAcc1, TestAcc2, etc.) ✅
+   - Key = fromAccount ✅
+   - Vollständige JSON-Daten im Value ✅
+
+**Fraud Alerts überprüfen:**
+1. Navigiere zu **Topics** → **fraud-alerts**
+2. Klicke auf **Consumers** Tab
+3. **Was du sehen solltest:**
+   - Consumer Group: `notification-group` ✅
+   - 1 Consumer aktiv ✅
+
+4. Klicke auf **Messages** Tab
+5. **Erwartete Ausgabe:**
+   - Alle Fraud Alerts (HIGH_AMOUNT, SUSPICIOUS_LOCATION) ✅
+   - alertType, accountId, transactionAmount sichtbar ✅
+
 #### Test 2: Fraud Alert senden
 ```cmd
 curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"TestAcc3\", \"toAccount\": \"TestAcc4\", \"amount\": 20000.00, \"currency\": \"EUR\"}"
@@ -439,6 +487,32 @@ LIMIT 5;
 \q
 ```
 
+#### ✨ Visuelle Überprüfung im Kafka UI (Optional)
+
+**Überprüfe alle verarbeiteten Transaktionen:**
+1. Öffne http://localhost:8080
+2. Navigiere zu **Topics** → **valid-transactions**
+3. Klicke auf **Messages** Tab
+4. Suche nach `VerifAcc`
+
+**Was du sehen solltest:**
+- ✅ 1 Message für die Transaktion VerifAcc1 → VerifAcc2 (200 EUR)
+- ✅ Key = "VerifAcc1"
+- ✅ Value enthält alle Transaktionsdetails
+
+**Überprüfe Consumer Group:**
+1. Klicke auf **Consumers** Tab
+2. **Was du sehen solltest:**
+   - Consumer Group: `transfer-service-group` ✅
+   - 3 Consumers aktiv (alle 3 Transfer-Service Instanzen) ✅
+   - Partition-Assignment sichtbar (0, 1, 2 zu verschiedenen Consumers)
+   - LAG = 0 (alle Messages verarbeitet)
+
+**Interpretation:**
+- Alle 3 Transfer-Services lesen vom gleichen Topic
+- Kafka sorgt für Load Balancing (jeder Service bekommt 1 Partition)
+- Keine Duplikate, da jede Partition nur von 1 Consumer gelesen wird
+
 ### ✅ Lösung für Aufgabe 4:
 - **getOrCreateAccount()**: Erstellt Konto mit 1000.00 falls nicht vorhanden
 - **updateBalance()**: Aktualisiert Kontostände (subtract/add)
@@ -551,6 +625,40 @@ transfer-service-group   valid-transactions 2          12              12       
 - LAG = 0 (alle Nachrichten wurden verarbeitet) ✅
 - Perfektes Load Balancing durch Kafka! ✅
 
+#### ✨ Visuelle Überprüfung im Kafka UI (Optional)
+
+**Überprüfe Load Balancing in Echtzeit:**
+1. Öffne http://localhost:8080
+2. Navigiere zu **Topics** → **valid-transactions**
+3. Klicke auf **Messages** Tab
+4. **Was du sehen solltest:**
+   - 9 Messages von ScaleAcc1 bis ScaleAcc9 ✅
+   - Jede Message ist in einer der 3 Partitionen (0, 1 oder 2)
+   - Gleichmäßige Verteilung: ca. 3 Messages pro Partition
+
+5. Klicke auf **Consumers** Tab
+6. **Consumer Group Status:**
+   ```
+   Group: transfer-service-group
+   Members: 3
+   ├─ Consumer 1: Partition 0 (LAG: 0)
+   ├─ Consumer 2: Partition 1 (LAG: 0)
+   └─ Consumer 3: Partition 2 (LAG: 0)
+   ```
+
+**Wichtige Beobachtungen:**
+- ✅ Jede Partition hat genau 1 Consumer zugewiesen
+- ✅ LAG = 0 bedeutet: Alle Messages wurden verarbeitet
+- ✅ Offset zeigt: Jeder Consumer hat seine Partition vollständig gelesen
+
+**Überprüfe Partition-Verteilung:**
+1. Klicke auf **Statistics** Tab
+2. **Was du sehen solltest:**
+   - Partition 0: ~3 Messages
+   - Partition 1: ~3 Messages  
+   - Partition 2: ~3 Messages
+   - Gleichmäßige Verteilung durch Kafka's Hash-Partitioner!
+
 ### ✅ Lösung für Aufgabe 5:
 - **Partitionen**: 3 (ermöglicht bis zu 3 parallele Consumer)
 - **Consumer Groups**: 1 Gruppe "transfer-service-group" für alle Instanzen
@@ -630,6 +738,32 @@ INFO Transaction saved: idempotenz-test-999
 INFO [transfer-service-group] Received transaction: idempotenz-test-999 from IdempAcc1 to IdempAcc2 amount: 300.0
 WARN Transaction idempotenz-test-999 already processed. Skipping.  ← IDEMPOTENZ!
 ```
+
+#### ✨ Visuelle Überprüfung im Kafka UI (Optional)
+
+**Überprüfe dass die Transaktion nur 1x im valid-transactions Topic ist:**
+1. Öffne http://localhost:8080
+2. Navigiere zu **Topics** → **valid-transactions**
+3. Klicke auf **Messages** Tab
+4. Suche nach `idempotenz-test-999` (nutze das Suchfeld oben)
+
+**Was du sehen solltest:**
+- ✅ Nur **1 Message** mit transactionId `idempotenz-test-999`
+- ✅ NICHT 2 Messages (Beweis für Idempotenz!)
+- ✅ Timestamp zeigt den ersten Versand
+
+**Zusätzlich: Consumer Group Status:**
+1. Navigiere zu **Topics** → **valid-transactions** → **Consumers** Tab
+2. **Was du sehen solltest:**
+   - Consumer Group: `transfer-service-group` ✅
+   - 3 Consumers aktiv (die 3 Instanzen) ✅
+   - LAG = 0 (alle Messages verarbeitet) ✅
+
+**Interpretation:**
+- Die zweite Transaktion wurde vom Transfer-Service empfangen (sichtbar in Logs)
+- Sie wurde NICHT in die Datenbank geschrieben (Idempotenz-Check hat sie abgelehnt)
+- Im valid-transactions Topic ist sie nur 1x vorhanden (Kafka speichert alle Messages)
+- Der Idempotenz-Check verhindert die doppelte **Verarbeitung**, nicht den doppelten **Empfang**
 
 #### Duplikat-Check in Datenbank
 ```cmd
