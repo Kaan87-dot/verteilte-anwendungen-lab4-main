@@ -103,6 +103,17 @@ Created topic valid-transactions.
 Created topic fraud-alerts.
 ```
 
+**⚠️ WICHTIG: Services neu starten!**
+
+Nach der Topic-Erstellung müssen die Consumer-Services neu gestartet werden, damit sie die Topics erkennen:
+
+```cmd
+docker-compose restart fraud-alert-service notification-service transfer-service-1 transfer-service-2 transfer-service-3
+timeout /t 10 /nobreak
+```
+
+**Warum?** Die Services waren beim Start hochgefahren, als die Topics noch nicht existierten. Nach dem Neustart verbinden sie sich korrekt mit den Topics.
+
 ---
 
 ## ✅ AUFGABE 1: Topic-Erstellung raw-transactions (1 Punkt)
@@ -196,9 +207,19 @@ docker logs fraud-alert-service --tail 20
 INFO Valid Transaction sent: Transaction{fromAccount='DEAcc1', toAccount='DEAcc2', amount=500.0}
 ```
 
-**Im Kafka UI:**
-- Topic **valid-transactions** enthält die Transaktion ✅
-- Topic **fraud-alerts** enthält sie NICHT ✅
+**Im Kafka UI überprüfen:**
+1. Öffne **http://localhost:8080**
+2. Navigiere zu **Topics** → **valid-transactions**
+3. Klicke auf **Messages**
+
+**Erwartete Ausgabe:**
+- Die 500 EUR Transaktion ist sichtbar ✅
+- Key = "DEAcc1" (fromAccount)
+- Value = JSON mit allen Transaktionsdetails
+- Partition 0, 1 oder 2 (automatisch verteilt)
+
+**Überprüfe fraud-alerts Topic:**
+- Sollte diese Transaktion NICHT enthalten ✅
 
 #### Test 2: Fraud durch hohen Betrag (> 10.000)
 ```cmd
@@ -215,9 +236,31 @@ docker logs fraud-alert-service --tail 20
 WARN Fraud Alert sent: HIGH_AMOUNT for account DEAcc1
 ```
 
-**Im Kafka UI:**
-- Topic **fraud-alerts** enthält den Alert ✅
-- Topic **valid-transactions** enthält sie NICHT ✅
+**Im Kafka UI überprüfen:**
+1. Öffne **http://localhost:8080**
+2. Navigiere zu **Topics** → **fraud-alerts**
+3. Klicke auf **Messages**
+
+**Erwartete Ausgabe:**
+```json
+{
+  "alertId": "...",
+  "accountId": "DEAcc1",
+  "alertType": "HIGH_AMOUNT",
+  "transactionAmount": 15000.0,
+  "timestamp": "...",
+  "detectedBy": null,
+  "severity": null
+}
+```
+
+**Wichtige Felder:**
+- `alertType`: "HIGH_AMOUNT" ✅
+- `accountId`: "DEAcc1" ✅
+- `transactionAmount`: 15000.0 ✅
+
+**Überprüfe valid-transactions Topic:**
+- Sollte diese 15.000 EUR Transaktion NICHT enthalten ✅ (nur im fraud-alerts Topic)
 
 #### Test 3: Fraud durch verdächtiges Land (NG, KP, RU)
 ```cmd
@@ -228,6 +271,22 @@ curl -X POST http://localhost:8081/api/transactions -H "Content-Type: applicatio
 ```
 WARN Fraud Alert sent: SUSPICIOUS_LOCATION for account NGAcc1
 ```
+
+**Im Kafka UI:**
+- Topic **fraud-alerts** enthält den SUSPICIOUS_LOCATION Alert für NGAcc1 ✅
+
+#### Zusammenfassung der Fraud-Erkennung
+
+Nach den Tests solltest du im **fraud-alerts Topic** mehrere Alerts sehen:
+- Mindestens 1x HIGH_AMOUNT (> 10.000 EUR)
+- Mindestens 1x SUSPICIOUS_LOCATION (NG, KP oder RU Ländercode)
+
+Alle Alerts enthalten:
+- `alertId`: Eindeutige ID
+- `accountId`: Betroffenes Konto
+- `alertType`: HIGH_AMOUNT oder SUSPICIOUS_LOCATION
+- `transactionAmount`: Betrag der Transaktion
+- `timestamp`: Zeitpunkt der Erkennung
 
 ### ✅ Lösung für Aufgabe 2:
 - **HighAmountStrategy**: Prüft Betrag > 10.000 EUR
@@ -253,14 +312,19 @@ curl -X POST http://localhost:8081/api/transactions -H "Content-Type: applicatio
 REM Warten (5 Sekunden)
 timeout /t 5 /nobreak
 
-REM Logs prüfen
-docker logs notification-service | findstr "Valid Transaction"
+REM Logs prüfen (letzte 30 Zeilen)
+docker logs notification-service --tail 30
 ```
 
 **Erwartete Ausgabe:**
 ```
 INFO ✓ Valid Transaction: tx-... | From: TestAcc1 | To: TestAcc2 | Amount: 250.0 EUR
 ```
+
+**Was bedeutet das?**
+- Der Notification-Service hat die gültige Transaktion empfangen ✅
+- Log-Level ist **INFO** (nicht WARN) ✅
+- Alle Transaktionsdetails sind sichtbar ✅
 
 #### Test 2: Fraud Alert senden
 ```cmd
@@ -269,23 +333,22 @@ curl -X POST http://localhost:8081/api/transactions -H "Content-Type: applicatio
 REM Warten
 timeout /t 5 /nobreak
 
-REM Logs prüfen
-docker logs notification-service | findstr "FRAUD ALERT"
-```
-    "currency": "EUR"
-  }'
-
-# Warten
-sleep 5
-
-# Logs prüfen
-docker logs notification-service | grep "FRAUD ALERT"
+REM Logs prüfen (letzte 30 Zeilen)
+docker logs notification-service --tail 30
 ```
 
 **Erwartete Ausgabe:**
 ```
 WARN ⚠ FRAUD ALERT: HIGH_AMOUNT | Alert ID: ... | Account: TestAcc3 | Amount: 20000.0 | Timestamp: ...
 ```
+
+**Was bedeutet das?**
+- Der Notification-Service hat den Fraud Alert empfangen ✅
+- Log-Level ist **WARN** (nicht INFO) ✅ 
+- Alert-Typ ist HIGH_AMOUNT ✅
+- Alle Alert-Details sind sichtbar ✅
+
+**Wichtig:** Du solltest sowohl INFO (für valid) als auch WARN (für fraud) Logs sehen können!
 
 ### ✅ Lösung für Aufgabe 3:
 - **Consumer Groups**: notification-group (eine Gruppe für beide Topics)
@@ -492,19 +555,11 @@ docker exec -it transfer-db psql -U transferuser -d transferdb -c "SELECT accoun
 ```cmd
 REM 3. GLEICHE Transaktion nochmal senden
 curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"transactionId\": \"idempotenz-test-999\", \"fromAccount\": \"IdempAcc1\", \"toAccount\": \"IdempAcc2\", \"amount\": 300.00, \"currency\": \"EUR\"}"
-  -d '{
-    "transactionId": "idempotenz-test-999",
-    "fromAccount": "IdempAcc1",
-    "toAccount": "IdempAcc2",
-    "amount": 300.00,
-    "currency": "EUR"
-  }'
 
-sleep 5
+timeout /t 5 /nobreak
 
-# 4. Kontostände NACHHER prüfen
-docker exec -it transfer-db psql -U transferuser -d transferdb \
-  -c "SELECT account_id, balance FROM accounts WHERE account_id IN ('IdempAcc1', 'IdempAcc2');"
+REM 4. Kontostände NACHHER prüfen
+docker exec -it transfer-db psql -U transferuser -d transferdb -c "SELECT account_id, balance FROM accounts WHERE account_id IN ('IdempAcc1', 'IdempAcc2');"
 ```
 
 **Erwartete Ausgabe:**
