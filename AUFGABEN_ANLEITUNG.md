@@ -458,58 +458,98 @@ LIMIT 5;
 ### Wie testen?
 
 #### Test: Load Balancing überprüfen
+
+**Schritt 1: 9 Transaktionen senden**
 ```cmd
-REM 9 Transaktionen senden (Schleife in CMD)
-for /L %%i in (1,1,9) do (
-  curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"ScaleAcc%%i\", \"toAccount\": \"TargetAcc\", \"amount\": 100, \"currency\": \"EUR\"}"
-  echo  - Transaktion %%i gesendet
-  timeout /t 1 /nobreak >nul
-)
+REM 9 Transaktionen senden (Schleife in einer Zeile)
+for /L %i in (1,1,9) do @(curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\":\"ScaleAcc%i\",\"toAccount\":\"TargetAcc\",\"amount\":100,\"currency\":\"EUR\"}" & timeout /t 1 /nobreak >nul)
+```
 
-REM Warten
-timeout /t 10 /nobreak
+**Hinweis:** Die for-Schleife muss in einer Zeile ausgeführt werden. In einer Batch-Datei kannst du `%%i` verwenden, in CMD direkt nur `%i`.
 
-REM Logs aller 3 Instanzen prüfen
+**Erwartete Ausgabe:**
+```json
+{"amount":100.0,"currency":"EUR","fromAccount":"ScaleAcc1",...}
+{"amount":100.0,"currency":"EUR","fromAccount":"ScaleAcc2",...}
+...
+{"amount":100.0,"currency":"EUR","fromAccount":"ScaleAcc9",...}
+```
+
+**Schritt 2: Warten bis alle verarbeitet sind**
+```cmd
+timeout /t 5 /nobreak
+```
+
+**Schritt 3: Logs aller 3 Instanzen prüfen**
+```cmd
 echo === Instance 1 ===
-docker logs transfer-service-1 | findstr "ScaleAcc" | find /c /v ""
+docker logs transfer-service-1 --tail 50 | findstr "ScaleAcc"
 
+echo.
 echo === Instance 2 ===
-docker logs transfer-service-2 | findstr "ScaleAcc" | find /c /v ""
+docker logs transfer-service-2 --tail 50 | findstr "ScaleAcc"
 
+echo.
 echo === Instance 3 ===
-docker logs transfer-service-3 | findstr "ScaleAcc" | find /c /v ""
+docker logs transfer-service-3 --tail 50 | findstr "ScaleAcc"
 ```
 
 **Erwartete Ausgabe:**
 ```
 === Instance 1 ===
-3
+INFO Received transaction: ... from ScaleAcc1 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc1: 900.00
+INFO Received transaction: ... from ScaleAcc3 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc3: 900.00
+INFO Received transaction: ... from ScaleAcc5 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc5: 900.00
+
 === Instance 2 ===
-3
+INFO Received transaction: ... from ScaleAcc2 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc2: 900.00
+INFO Received transaction: ... from ScaleAcc4 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc4: 900.00
+INFO Received transaction: ... from ScaleAcc7 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc7: 900.00
+
 === Instance 3 ===
-3
+INFO Received transaction: ... from ScaleAcc6 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc6: 900.00
+INFO Received transaction: ... from ScaleAcc8 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc8: 900.00
+INFO Received transaction: ... from ScaleAcc9 to TargetAcc amount: 100.0
+INFO Updated balance for ScaleAcc9: 900.00
 ```
 
-**Erklärung:** Jede Instanz hat ca. 33% der Last verarbeitet (3 von 9 Transaktionen)
+**Erklärung:** 
+- Jede Instanz hat 3 von 9 Transaktionen verarbeitet (perfekte 33% Verteilung) ✅
+- Instance 1: ScaleAcc1, ScaleAcc3, ScaleAcc5
+- Instance 2: ScaleAcc2, ScaleAcc4, ScaleAcc7
+- Instance 3: ScaleAcc6, ScaleAcc8, ScaleAcc9
 
-#### Consumer Group Status überprüfen
+#### Consumer Group Status überprüfen (Optional)
 ```cmd
-docker exec -it kafka-broker kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group transfer-service-group
+REM Finde zuerst den Kafka-Container-Namen
+docker ps | findstr kafka-broker
+
+REM Verwende den Namen (z.B. verteilte-anwendungen-lab4-kafka-broker-1)
+docker exec verteilte-anwendungen-lab4-kafka-broker-1 /opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group transfer-service-group
 ```
 
 **Erwartete Ausgabe:**
 ```
-GROUP                    TOPIC              PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG
-transfer-service-group   valid-transactions 0          5               5               0
-transfer-service-group   valid-transactions 1          4               4               0
-transfer-service-group   valid-transactions 2          5               5               0
+GROUP                    TOPIC              PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG  CONSUMER-ID
+transfer-service-group   valid-transactions 0          12              12              0    transfer-service-1-...
+transfer-service-group   valid-transactions 1          11              11              0    transfer-service-2-...
+transfer-service-group   valid-transactions 2          12              12              0    transfer-service-3-...
 ```
 
 **Erklärung:**
 - 3 Consumer (die 3 Instanzen) ✅
 - 3 Partitionen (0, 1, 2) ✅
-- Jede Instanz hat eine Partition ✅
-- LAG = 0 (alle Nachrichten verarbeitet) ✅
+- Jede Instanz hat eine Partition zugewiesen ✅
+- LAG = 0 (alle Nachrichten wurden verarbeitet) ✅
+- Perfektes Load Balancing durch Kafka! ✅
 
 ### ✅ Lösung für Aufgabe 5:
 - **Partitionen**: 3 (ermöglicht bis zu 3 parallele Consumer)
