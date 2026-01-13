@@ -54,6 +54,55 @@ transfer-service-3      Up        0.0.0.0:8087->8087/tcp
 transfer-db             Up        0.0.0.0:5432->5432/tcp
 ```
 
+**Hinweis:** Die Container-Namen können je nach Docker-Compose Version ein Präfix haben (z.B. `verteilte-anwendungen-lab4-kafka-broker-1`).
+
+### 1.3 Kafka Topics erstellen
+
+Da Auto-Create deaktiviert ist, müssen die Topics manuell erstellt werden:
+
+**Option 1: Automatisches Script (empfohlen)**
+```cmd
+REM Führe das bereitgestellte Script aus
+create-topics.cmd
+```
+
+Das Script findet automatisch den Kafka-Container und erstellt alle benötigten Topics.
+
+**Option 2: Manuelle Erstellung**
+```cmd
+REM Finde zuerst den genauen Namen des Kafka-Containers
+docker ps | findstr kafka-broker
+
+REM Verwende den Containernamen (z.B. verteilte-anwendungen-lab4-kafka-broker-1)
+REM Erstelle die Topics (ersetze CONTAINER_NAME mit deinem Containernamen):
+
+REM Topic: raw-transactions (3 Partitionen)
+docker exec -it CONTAINER_NAME kafka-topics --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+REM Topic: valid-transactions (3 Partitionen)
+docker exec -it CONTAINER_NAME kafka-topics --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+REM Topic: fraud-alerts (3 Partitionen)
+docker exec -it CONTAINER_NAME kafka-topics --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+REM Prüfe ob Topics erstellt wurden
+docker exec -it CONTAINER_NAME kafka-topics --list --bootstrap-server localhost:9092
+```
+
+**Beispiel mit vollständigem Namen:**
+```cmd
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+```
+
+**Erwartete Ausgabe:**
+```
+Created topic raw-transactions.
+Created topic valid-transactions.
+Created topic fraud-alerts.
+```
+
 ---
 
 ## ✅ AUFGABE 1: Topic-Erstellung raw-transactions (1 Punkt)
@@ -93,7 +142,17 @@ HTTP Status: **202 Accepted**
 
 #### Test 3: Konfiguration überprüfen
 ```cmd
-docker exec -it kafka-broker kafka-topics --bootstrap-server localhost:9092 --describe --topic raw-transactions
+REM Verwende den Containernamen aus docker ps (z.B. verteilte-anwendungen-lab4-kafka-broker-1)
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --bootstrap-server localhost:9092 --describe --topic raw-transactions
+```
+
+**Alternative:** Falls dein Container einen anderen Namen hat:
+```cmd
+REM Finde den genauen Namen
+docker ps | findstr kafka-broker
+
+REM Verwende dann den angezeigten Namen
+docker exec -it IHR_CONTAINER_NAME kafka-topics --bootstrap-server localhost:9092 --describe --topic raw-transactions
 ```
 
 **Erwartete Ausgabe:**
