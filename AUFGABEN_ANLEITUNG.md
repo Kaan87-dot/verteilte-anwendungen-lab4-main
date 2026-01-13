@@ -1,4 +1,4 @@
-# Komplette Anleitung: Aufgaben 1-6 beenden
+# Komplette Anleitung: Aufgaben 1-6 beenden (Windows CMD)
 
 ## 📋 Übersicht: Was musst du tun?
 
@@ -12,13 +12,14 @@ Alle 6 Aufgaben sind bereits **vollständig implementiert**! Du musst nur noch:
 ## 🚀 SCHRITT 1: System starten
 
 ### 1.1 Projekt bauen
-```bash
-cd /home/runner/work/verteilte-anwendungen-lab4-main/verteilte-anwendungen-lab4-main
+```cmd
+REM Wechsle ins Projektverzeichnis (passe den Pfad an!)
+cd C:\Pfad\zu\verteilte-anwendungen-lab4-main
 
-# Maven Build (dauert ca. 2-3 Minuten)
+REM Maven Build (dauert ca. 2-3 Minuten)
 mvn clean package -DskipTests
 
-# Docker Images bauen (dauert ca. 5-10 Minuten)
+REM Docker Images bauen (dauert ca. 5-10 Minuten)
 docker-compose build
 ```
 
@@ -29,14 +30,14 @@ docker-compose build
 ```
 
 ### 1.2 System starten
-```bash
-# Alle Services starten
+```cmd
+REM Alle Services starten
 docker-compose up -d
 
-# 60 Sekunden warten bis alles hochgefahren ist
-sleep 60
+REM 60 Sekunden warten bis alles hochgefahren ist
+timeout /t 60 /nobreak
 
-# Status prüfen - alle Services sollten "Up" sein
+REM Status prüfen - alle Services sollten "Up" sein
 docker-compose ps
 ```
 
@@ -63,15 +64,8 @@ transfer-db             Up        0.0.0.0:5432->5432/tcp
 ### Wie testen?
 
 #### Test 1: Transaktion senden
-```bash
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromAccount": "DEAcc1",
-    "toAccount": "DEAcc2",
-    "amount": 100.50,
-    "currency": "EUR"
-  }'
+```cmd
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"DEAcc1\", \"toAccount\": \"DEAcc2\", \"amount\": 100.50, \"currency\": \"EUR\"}"
 ```
 
 **Erwartete Ausgabe:**
@@ -98,11 +92,8 @@ HTTP Status: **202 Accepted**
 - Enthält deine Transaktion ✅
 
 #### Test 3: Konfiguration überprüfen
-```bash
-docker exec -it kafka-broker kafka-topics \
-  --bootstrap-server localhost:9092 \
-  --describe \
-  --topic raw-transactions
+```cmd
+docker exec -it kafka-broker kafka-topics --bootstrap-server localhost:9092 --describe --topic raw-transactions
 ```
 
 **Erwartete Ausgabe:**
@@ -131,21 +122,14 @@ ReplicationFactor: 1
 ### Wie testen?
 
 #### Test 1: Gültige Transaktion (sollte NICHT als Fraud erkannt werden)
-```bash
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromAccount": "DEAcc1",
-    "toAccount": "DEAcc2",
-    "amount": 500.00,
-    "currency": "EUR"
-  }'
+```cmd
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"DEAcc1\", \"toAccount\": \"DEAcc2\", \"amount\": 500.00, \"currency\": \"EUR\"}"
 ```
 
 **Überprüfen:**
-```bash
-# Logs des Fraud-Alert-Service
-docker logs fraud-alert-service | tail -20
+```cmd
+REM Logs des Fraud-Alert-Service (letzte 20 Zeilen)
+docker logs fraud-alert-service --tail 20
 ```
 
 **Erwartete Ausgabe:**
@@ -158,20 +142,13 @@ INFO Valid Transaction sent: Transaction{fromAccount='DEAcc1', toAccount='DEAcc2
 - Topic **fraud-alerts** enthält sie NICHT ✅
 
 #### Test 2: Fraud durch hohen Betrag (> 10.000)
-```bash
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromAccount": "DEAcc1",
-    "toAccount": "DEAcc2",
-    "amount": 15000.00,
-    "currency": "EUR"
-  }'
+```cmd
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"DEAcc1\", \"toAccount\": \"DEAcc2\", \"amount\": 15000.00, \"currency\": \"EUR\"}"
 ```
 
 **Überprüfen:**
-```bash
-docker logs fraud-alert-service | tail -20
+```cmd
+docker logs fraud-alert-service --tail 20
 ```
 
 **Erwartete Ausgabe:**
@@ -184,15 +161,8 @@ WARN Fraud Alert sent: HIGH_AMOUNT for account DEAcc1
 - Topic **valid-transactions** enthält sie NICHT ✅
 
 #### Test 3: Fraud durch verdächtiges Land (NG, KP, RU)
-```bash
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromAccount": "NGAcc1",
-    "toAccount": "DEAcc2",
-    "amount": 500.00,
-    "currency": "EUR"
-  }'
+```cmd
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"NGAcc1\", \"toAccount\": \"DEAcc2\", \"amount\": 500.00, \"currency\": \"EUR\"}"
 ```
 
 **Erwartete Ausgabe:**
@@ -218,21 +188,14 @@ WARN Fraud Alert sent: SUSPICIOUS_LOCATION for account NGAcc1
 ### Wie testen?
 
 #### Test 1: Gültige Transaktion senden
-```bash
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromAccount": "TestAcc1",
-    "toAccount": "TestAcc2",
-    "amount": 250.00,
-    "currency": "EUR"
-  }'
+```cmd
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"TestAcc1\", \"toAccount\": \"TestAcc2\", \"amount\": 250.00, \"currency\": \"EUR\"}"
 
-# Warten
-sleep 5
+REM Warten (5 Sekunden)
+timeout /t 5 /nobreak
 
-# Logs prüfen
-docker logs notification-service | grep "Valid Transaction"
+REM Logs prüfen
+docker logs notification-service | findstr "Valid Transaction"
 ```
 
 **Erwartete Ausgabe:**
@@ -241,13 +204,15 @@ INFO ✓ Valid Transaction: tx-... | From: TestAcc1 | To: TestAcc2 | Amount: 250
 ```
 
 #### Test 2: Fraud Alert senden
-```bash
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromAccount": "TestAcc3",
-    "toAccount": "TestAcc4",
-    "amount": 20000.00,
+```cmd
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"TestAcc3\", \"toAccount\": \"TestAcc4\", \"amount\": 20000.00, \"currency\": \"EUR\"}"
+
+REM Warten
+timeout /t 5 /nobreak
+
+REM Logs prüfen
+docker logs notification-service | findstr "FRAUD ALERT"
+```
     "currency": "EUR"
   }'
 
@@ -282,23 +247,16 @@ WARN ⚠ FRAUD ALERT: HIGH_AMOUNT | Alert ID: ... | Account: TestAcc3 | Amount: 
 ### Wie testen?
 
 #### Test: Transaktion durchführen
-```bash
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "fromAccount": "VerifAcc1",
-    "toAccount": "VerifAcc2",
-    "amount": 200.00,
-    "currency": "EUR"
-  }'
+```cmd
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"VerifAcc1\", \"toAccount\": \"VerifAcc2\", \"amount\": 200.00, \"currency\": \"EUR\"}"
 
-# Warten
-sleep 5
+REM Warten
+timeout /t 5 /nobreak
 
-# Logs einer Transfer-Service Instanz prüfen
-docker logs transfer-service-1 | grep "VerifAcc"
-docker logs transfer-service-2 | grep "VerifAcc"
-docker logs transfer-service-3 | grep "VerifAcc"
+REM Logs einer Transfer-Service Instanz prüfen
+docker logs transfer-service-1 | findstr "VerifAcc"
+docker logs transfer-service-2 | findstr "VerifAcc"
+docker logs transfer-service-3 | findstr "VerifAcc"
 ```
 
 **Erwartete Ausgabe (in einer der 3 Instanzen):**
@@ -310,8 +268,8 @@ INFO Transaction saved: tx-...
 ```
 
 #### Datenbank überprüfen
-```bash
-# In PostgreSQL einloggen
+```cmd
+REM In PostgreSQL einloggen
 docker exec -it transfer-db psql -U transferuser -d transferdb
 ```
 
@@ -378,28 +336,26 @@ LIMIT 5;
 ### Wie testen?
 
 #### Test: Load Balancing überprüfen
-```bash
-# 9 Transaktionen senden
-for i in {1..9}; do
-  curl -X POST http://localhost:8081/api/transactions \
-    -H "Content-Type: application/json" \
-    -d "{\"fromAccount\":\"ScaleAcc${i}\",\"toAccount\":\"TargetAcc\",\"amount\":100,\"currency\":\"EUR\"}"
-  echo " - Transaktion $i gesendet"
-  sleep 1
-done
+```cmd
+REM 9 Transaktionen senden (Schleife in CMD)
+for /L %%i in (1,1,9) do (
+  curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\": \"ScaleAcc%%i\", \"toAccount\": \"TargetAcc\", \"amount\": 100, \"currency\": \"EUR\"}"
+  echo  - Transaktion %%i gesendet
+  timeout /t 1 /nobreak >nul
+)
 
-# Warten
-sleep 10
+REM Warten
+timeout /t 10 /nobreak
 
-# Logs aller 3 Instanzen prüfen
-echo "=== Instance 1 ==="
-docker logs transfer-service-1 | grep "ScaleAcc" | wc -l
+REM Logs aller 3 Instanzen prüfen
+echo === Instance 1 ===
+docker logs transfer-service-1 | findstr "ScaleAcc" | find /c /v ""
 
-echo "=== Instance 2 ==="
-docker logs transfer-service-2 | grep "ScaleAcc" | wc -l
+echo === Instance 2 ===
+docker logs transfer-service-2 | findstr "ScaleAcc" | find /c /v ""
 
-echo "=== Instance 3 ==="
-docker logs transfer-service-3 | grep "ScaleAcc" | wc -l
+echo === Instance 3 ===
+docker logs transfer-service-3 | findstr "ScaleAcc" | find /c /v ""
 ```
 
 **Erwartete Ausgabe:**
@@ -415,11 +371,8 @@ docker logs transfer-service-3 | grep "ScaleAcc" | wc -l
 **Erklärung:** Jede Instanz hat ca. 33% der Last verarbeitet (3 von 9 Transaktionen)
 
 #### Consumer Group Status überprüfen
-```bash
-docker exec -it kafka-broker kafka-consumer-groups \
-  --bootstrap-server localhost:9092 \
-  --describe \
-  --group transfer-service-group
+```cmd
+docker exec -it kafka-broker kafka-consumer-groups --bootstrap-server localhost:9092 --describe --group transfer-service-group
 ```
 
 **Erwartete Ausgabe:**
@@ -456,23 +409,14 @@ transfer-service-group   valid-transactions 2          5               5        
 ### Wie testen?
 
 #### Test: Doppelte Verarbeitung simulieren
-```bash
-# 1. Transaktion mit fester ID senden
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transactionId": "idempotenz-test-999",
-    "fromAccount": "IdempAcc1",
-    "toAccount": "IdempAcc2",
-    "amount": 300.00,
-    "currency": "EUR"
-  }'
+```cmd
+REM 1. Transaktion mit fester ID senden
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"transactionId\": \"idempotenz-test-999\", \"fromAccount\": \"IdempAcc1\", \"toAccount\": \"IdempAcc2\", \"amount\": 300.00, \"currency\": \"EUR\"}"
 
-sleep 5
+timeout /t 5 /nobreak
 
-# 2. Kontostände VORHER notieren
-docker exec -it transfer-db psql -U transferuser -d transferdb \
-  -c "SELECT account_id, balance FROM accounts WHERE account_id IN ('IdempAcc1', 'IdempAcc2');"
+REM 2. Kontostände VORHER notieren
+docker exec -it transfer-db psql -U transferuser -d transferdb -c "SELECT account_id, balance FROM accounts WHERE account_id IN ('IdempAcc1', 'IdempAcc2');"
 ```
 
 **Erwartete Ausgabe:**
@@ -486,10 +430,9 @@ docker exec -it transfer-db psql -U transferuser -d transferdb \
 
 **Notiere diese Werte!**
 
-```bash
-# 3. GLEICHE Transaktion nochmal senden
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
+```cmd
+REM 3. GLEICHE Transaktion nochmal senden
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"transactionId\": \"idempotenz-test-999\", \"fromAccount\": \"IdempAcc1\", \"toAccount\": \"IdempAcc2\", \"amount\": 300.00, \"currency\": \"EUR\"}"
   -d '{
     "transactionId": "idempotenz-test-999",
     "fromAccount": "IdempAcc1",
@@ -516,11 +459,11 @@ docker exec -it transfer-db psql -U transferuser -d transferdb \
 
 **✅ BEWEIS: Kontostände sind gleich geblieben!**
 
-```bash
-# 5. Logs prüfen
-docker logs transfer-service-1 | grep "idempotenz-test-999"
-docker logs transfer-service-2 | grep "idempotenz-test-999"
-docker logs transfer-service-3 | grep "idempotenz-test-999"
+```cmd
+REM 5. Logs prüfen
+docker logs transfer-service-1 | findstr "idempotenz-test-999"
+docker logs transfer-service-2 | findstr "idempotenz-test-999"
+docker logs transfer-service-3 | findstr "idempotenz-test-999"
 ```
 
 **Erwartete Ausgabe:**
@@ -535,7 +478,7 @@ WARN Transaction idempotenz-test-999 already processed. Skipping.  ← IDEMPOTEN
 ```
 
 #### Duplikat-Check in Datenbank
-```bash
+```cmd
 docker exec -it transfer-db psql -U transferuser -d transferdb
 ```
 
@@ -586,55 +529,47 @@ GROUP BY transaction_id;
 
 Führe diesen Test durch um alles auf einmal zu überprüfen:
 
-```bash
-echo "=== 1. Gültige Transaktion ==="
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{"fromAccount":"E2E1","toAccount":"E2E2","amount":150,"currency":"EUR"}'
+```cmd
+echo === 1. Gültige Transaktion ===
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\":\"E2E1\",\"toAccount\":\"E2E2\",\"amount\":150,\"currency\":\"EUR\"}"
 
-sleep 5
+timeout /t 5 /nobreak
 
-echo "=== 2. Fraud: Hoher Betrag ==="
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{"fromAccount":"E2E3","toAccount":"E2E4","amount":25000,"currency":"EUR"}'
+echo === 2. Fraud: Hoher Betrag ===
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\":\"E2E3\",\"toAccount\":\"E2E4\",\"amount\":25000,\"currency\":\"EUR\"}"
 
-sleep 5
+timeout /t 5 /nobreak
 
-echo "=== 3. Fraud: Verdächtiges Land ==="
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{"fromAccount":"KPAcc1","toAccount":"E2E5","amount":500,"currency":"EUR"}'
+echo === 3. Fraud: Verdächtiges Land ===
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\":\"KPAcc1\",\"toAccount\":\"E2E5\",\"amount\":500,\"currency\":\"EUR\"}"
 
-sleep 5
+timeout /t 5 /nobreak
 
-echo "=== 4. Gültige Transaktion ==="
-curl -X POST http://localhost:8081/api/transactions \
-  -H "Content-Type: application/json" \
-  -d '{"fromAccount":"E2E6","toAccount":"E2E7","amount":750,"currency":"EUR"}'
+echo === 4. Gültige Transaktion ===
+curl -X POST http://localhost:8081/api/transactions -H "Content-Type: application/json" -d "{\"fromAccount\":\"E2E6\",\"toAccount\":\"E2E7\",\"amount\":750,\"currency\":\"EUR\"}"
 
-sleep 10
+timeout /t 10 /nobreak
 
-echo ""
-echo "=== ERGEBNISSE ÜBERPRÜFEN ==="
-echo ""
-echo "--- Notification-Service: Valid Transactions ---"
-docker logs notification-service | grep "Valid Transaction" | grep "E2E"
+echo.
+echo === ERGEBNISSE ÜBERPRÜFEN ===
+echo.
+echo --- Notification-Service: Valid Transactions ---
+docker logs notification-service | findstr "Valid Transaction" | findstr "E2E"
 
-echo ""
-echo "--- Notification-Service: Fraud Alerts ---"
-docker logs notification-service | grep "FRAUD ALERT" | grep -E "E2E|KP"
+echo.
+echo --- Notification-Service: Fraud Alerts ---
+docker logs notification-service | findstr "FRAUD ALERT" | findstr /C:"E2E" /C:"KP"
 
-echo ""
-echo "--- Datenbank: Anzahl verarbeiteter Transaktionen ---"
-docker exec -it transfer-db psql -U transferuser -d transferdb \
-  -c "SELECT COUNT(*) as valid_transactions FROM transactions WHERE from_account LIKE 'E2E%';"
+echo.
+echo --- Datenbank: Anzahl verarbeiteter Transaktionen ---
+docker exec -it transfer-db psql -U transferuser -d transferdb -c "SELECT COUNT(*) as valid_transactions FROM transactions WHERE from_account LIKE 'E2E%%';"
 
-echo ""
-echo "--- Transfer-Service: Load Balancing ---"
-echo "Instance 1: $(docker logs transfer-service-1 | grep 'E2E' | wc -l) Transaktionen"
-echo "Instance 2: $(docker logs transfer-service-2 | grep 'E2E' | wc -l) Transaktionen"
-echo "Instance 3: $(docker logs transfer-service-3 | grep 'E2E' | wc -l) Transaktionen"
+echo.
+echo --- Transfer-Service: Load Balancing ---
+REM Zähle Transaktionen pro Instanz
+for /f %%a in ('docker logs transfer-service-1 ^| findstr "E2E" ^| find /c /v ""') do echo Instance 1: %%a Transaktionen
+for /f %%a in ('docker logs transfer-service-2 ^| findstr "E2E" ^| find /c /v ""') do echo Instance 2: %%a Transaktionen
+for /f %%a in ('docker logs transfer-service-3 ^| findstr "E2E" ^| find /c /v ""') do echo Instance 3: %%a Transaktionen
 ```
 
 **Erwartete Ergebnisse:**
