@@ -77,23 +77,23 @@ REM Verwende den Containernamen (z.B. verteilte-anwendungen-lab4-kafka-broker-1)
 REM Erstelle die Topics (ersetze CONTAINER_NAME mit deinem Containernamen):
 
 REM Topic: raw-transactions (3 Partitionen)
-docker exec -it CONTAINER_NAME kafka-topics --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it CONTAINER_NAME /opt/kafka/bin/kafka-topics.sh --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 
 REM Topic: valid-transactions (3 Partitionen)
-docker exec -it CONTAINER_NAME kafka-topics --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it CONTAINER_NAME /opt/kafka/bin/kafka-topics.sh --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 
 REM Topic: fraud-alerts (3 Partitionen)
-docker exec -it CONTAINER_NAME kafka-topics --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it CONTAINER_NAME /opt/kafka/bin/kafka-topics.sh --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 
 REM Prüfe ob Topics erstellt wurden
-docker exec -it CONTAINER_NAME kafka-topics --list --bootstrap-server localhost:9092
+docker exec -it CONTAINER_NAME /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 ```
 
 **Beispiel mit vollständigem Namen:**
 ```cmd
-docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
-docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
-docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 /opt/kafka/bin/kafka-topics.sh --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 /opt/kafka/bin/kafka-topics.sh --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 /opt/kafka/bin/kafka-topics.sh --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 ```
 
 **Erwartete Ausgabe:**
@@ -143,7 +143,7 @@ HTTP Status: **202 Accepted**
 #### Test 3: Konfiguration überprüfen
 ```cmd
 REM Verwende den Containernamen aus docker ps (z.B. verteilte-anwendungen-lab4-kafka-broker-1)
-docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 kafka-topics --bootstrap-server localhost:9092 --describe --topic raw-transactions
+docker exec -it verteilte-anwendungen-lab4-kafka-broker-1 /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic raw-transactions
 ```
 
 **Alternative:** Falls dein Container einen anderen Namen hat:
@@ -152,7 +152,7 @@ REM Finde den genauen Namen
 docker ps | findstr kafka-broker
 
 REM Verwende dann den angezeigten Namen
-docker exec -it IHR_CONTAINER_NAME kafka-topics --bootstrap-server localhost:9092 --describe --topic raw-transactions
+docker exec -it IHR_CONTAINER_NAME /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic raw-transactions
 ```
 
 **Erwartete Ausgabe:**

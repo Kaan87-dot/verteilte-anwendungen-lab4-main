@@ -25,24 +25,24 @@ echo ""
 
 # Topic: raw-transactions erstellen
 echo "[1/3] Erstelle Topic: raw-transactions (3 Partitionen)..."
-docker exec -it $KAFKA_CONTAINER kafka-topics --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1 --if-not-exists
+docker exec -it $KAFKA_CONTAINER /opt/kafka/bin/kafka-topics.sh --create --topic raw-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1 --if-not-exists
 echo ""
 
 # Topic: valid-transactions erstellen
 echo "[2/3] Erstelle Topic: valid-transactions (3 Partitionen)..."
-docker exec -it $KAFKA_CONTAINER kafka-topics --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1 --if-not-exists
+docker exec -it $KAFKA_CONTAINER /opt/kafka/bin/kafka-topics.sh --create --topic valid-transactions --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1 --if-not-exists
 echo ""
 
 # Topic: fraud-alerts erstellen
 echo "[3/3] Erstelle Topic: fraud-alerts (3 Partitionen)..."
-docker exec -it $KAFKA_CONTAINER kafka-topics --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1 --if-not-exists
+docker exec -it $KAFKA_CONTAINER /opt/kafka/bin/kafka-topics.sh --create --topic fraud-alerts --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1 --if-not-exists
 echo ""
 
 # Liste alle Topics auf
 echo "========================================"
 echo "Vorhandene Topics / Existing Topics:"
 echo "========================================"
-docker exec -it $KAFKA_CONTAINER kafka-topics --list --bootstrap-server localhost:9092
+docker exec -it $KAFKA_CONTAINER /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 echo ""
 
 echo "========================================"

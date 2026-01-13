@@ -537,7 +537,7 @@ docker exec -it transfer-db psql -U transferuser -d transferdb -c "SELECT * FROM
 
 ```bash
 # Topics manuell erstellen
-docker exec -it kafka-broker kafka-topics --create \
+docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh --create \
   --topic raw-transactions \
   --bootstrap-server localhost:9092 \
   --partitions 3 \

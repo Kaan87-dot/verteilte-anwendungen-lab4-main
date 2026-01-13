@@ -354,7 +354,7 @@ curl -X POST http://localhost:8081/api/transactions \
 ### Problem: Topic existiert nicht
 ```bash
 # Manuell erstellen
-docker exec -it kafka-broker kafka-topics \
+docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh \
   --create --topic raw-transactions \
   --bootstrap-server localhost:9092 \
   --partitions 3 --replication-factor 1

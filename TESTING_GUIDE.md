@@ -72,7 +72,7 @@ docker-compose ps
 # URL: http://localhost:8080
 
 # Oder via Command Line:
-docker exec -it kafka-broker kafka-topics --bootstrap-server localhost:9092 --list
+docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
 ```
 
 **Erwartete Ausgabe**:
@@ -685,21 +685,21 @@ docker logs fraud-alert-service | grep "Fraud Alert"
 
 ```bash
 # Topics manuell erstellen
-docker exec -it kafka-broker kafka-topics \
+docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh \
   --create \
   --topic raw-transactions \
   --bootstrap-server localhost:9092 \
   --partitions 3 \
   --replication-factor 1
 
-docker exec -it kafka-broker kafka-topics \
+docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh \
   --create \
   --topic valid-transactions \
   --bootstrap-server localhost:9092 \
   --partitions 3 \
   --replication-factor 1
 
-docker exec -it kafka-broker kafka-topics \
+docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh \
   --create \
   --topic fraud-alerts \
   --bootstrap-server localhost:9092 \
@@ -769,7 +769,7 @@ docker logs <service-name> -f
 docker exec -it transfer-db psql -U transferuser -d transferdb
 
 # Kafka Topics auflisten
-docker exec -it kafka-broker kafka-topics --bootstrap-server localhost:9092 --list
+docker exec -it kafka-broker /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
 
 # Consumer Groups anzeigen
 docker exec -it kafka-broker kafka-consumer-groups --bootstrap-server localhost:9092 --list
