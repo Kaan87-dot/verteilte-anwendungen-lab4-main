@@ -59,10 +59,13 @@ public class AccountService {
         return account != null ? account.getBalance().doubleValue() : 0.0;
     }
 
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @Transactional
     public void updateBalance(String accountId, BigDecimal newBalance) {
-        Account account = getOrCreateAccount(accountId);
-        account.setBalance(newBalance);
+        Account account = accountRepository.findByAccountId(accountId);
+        if (account != null) {
+            account.setBalance(newBalance);
+            accountRepository.persist(account);
+        }
     }
 
     @Transactional
