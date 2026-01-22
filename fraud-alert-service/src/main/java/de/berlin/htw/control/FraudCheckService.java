@@ -20,8 +20,13 @@ public class FraudCheckService {
     private final List<IFraudStrategy> strategies = new ArrayList<>();
 
     public FraudCheckService() {
-        // TODO registrieren Sie die neue StrategyInterface
+        // Registrierung der Location-Strategie zur Prüfung verdächtiger Länder
+        // Registration of Location strategy to check suspicious countries
         strategies.add(new LocationStrategy());
+        
+        // Registrierung der HighAmount-Strategie zur Prüfung hoher Beträge
+        // Registration of HighAmount strategy to check high amounts
+        strategies.add(new HighAmountStrategy());
     }
 
     public void checkFraud(Transaction tx) {

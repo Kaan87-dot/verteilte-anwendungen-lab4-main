@@ -6,16 +6,22 @@ import de.berlin.htw.boundary.dto.Transaction;
 
 public class HighAmountStrategy implements IFraudStrategy {
 
-    // TODO überschreiben Sie die Methoden Hier
+    // Schwellenwert für hohe Beträge
+    // Threshold for high amounts
+    private static final double HIGH_AMOUNT_THRESHOLD = 10000.0;
 
     @Override
     public boolean isFraud(Transaction tx) {
-        return false;
+        // Prüft ob der Transaktionsbetrag über 10000 liegt
+        // Checks if the transaction amount is greater than 10000
+        return tx.getAmount() > HIGH_AMOUNT_THRESHOLD;
     }
 
     @Override
     public FraudeAlertType getAlertType() {
-        return null;
+        // Gibt den Typ des Fraud-Alerts zurück (HIGH_AMOUNT)
+        // Returns the type of fraud alert (HIGH_AMOUNT)
+        return FraudeAlertType.HIGH_AMOUNT;
     }
 }
 

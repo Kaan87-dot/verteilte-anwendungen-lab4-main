@@ -28,6 +28,15 @@ public class TransactionResource {
 
     @POST
     public Response postTransaction(Transaction tx) {
+        // Generiere transactionId und timestamp falls nicht vorhanden
+        // Generate transactionId and timestamp if not present
+        if (tx.getTransactionId() == null || tx.getTransactionId().isEmpty()) {
+            tx.setTransactionId(java.util.UUID.randomUUID().toString());
+        }
+        if (tx.getTimestamp() == null || tx.getTimestamp().isEmpty()) {
+            tx.setTimestamp(java.time.Instant.now().toString());
+        }
+        
         if (!validationService.isValid(tx)) {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Invalid transaction: missing fields or invalid amount").build();

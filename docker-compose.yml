@@ -115,7 +115,9 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
       QUARKUS_HTTP_PORT: 8084
-      KAFKA_CONSUMER_GROUP_ID: transfer-service-group-1
+      # Alle 3 Instanzen nutzen die gleiche Consumer Group für Load Balancing
+      # All 3 instances use the same consumer group for load balancing
+      KAFKA_CONSUMER_GROUP_ID: transfer-service-group
       QUARKUS_DATASOURCE_DB_KIND: postgresql
       QUARKUS_DATASOURCE_USERNAME: transferuser
       QUARKUS_DATASOURCE_PASSWORD: transferpass
@@ -138,7 +140,9 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
       QUARKUS_HTTP_PORT: 8086
-      KAFKA_CONSUMER_GROUP_ID: transfer-service-group-2
+      # Alle 3 Instanzen nutzen die gleiche Consumer Group für Load Balancing
+      # All 3 instances use the same consumer group for load balancing
+      KAFKA_CONSUMER_GROUP_ID: transfer-service-group
       QUARKUS_DATASOURCE_DB_KIND: postgresql
       QUARKUS_DATASOURCE_USERNAME: transferuser
       QUARKUS_DATASOURCE_PASSWORD: transferpass
@@ -161,7 +165,9 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: kafka-broker:29092
       QUARKUS_HTTP_PORT: 8087
-      KAFKA_CONSUMER_GROUP_ID: transfer-service-group-3
+      # Alle 3 Instanzen nutzen die gleiche Consumer Group für Load Balancing
+      # All 3 instances use the same consumer group for load balancing
+      KAFKA_CONSUMER_GROUP_ID: transfer-service-group
       QUARKUS_DATASOURCE_DB_KIND: postgresql
       QUARKUS_DATASOURCE_USERNAME: transferuser
       QUARKUS_DATASOURCE_PASSWORD: transferpass
