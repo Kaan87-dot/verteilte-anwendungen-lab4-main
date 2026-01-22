@@ -13,7 +13,7 @@
                 <constraints primaryKey="true" nullable="false"/>
             </column>
             <column name="account_id" type="VARCHAR(255)">
-                <constraints nullable="false"/>
+                <constraints nullable="false" unique="true"/>
             </column>
             <column name="balance" type="DECIMAL(19,2)">
                 <constraints nullable="false"/>
